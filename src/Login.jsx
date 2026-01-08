@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "./api"; // import the base URL
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -10,15 +11,31 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError(""); // reset error
+
     try {
-      const res = await axios.post("http://localhost:5050/login", { username, password });
+      const res = await axios.post(`${BASE_URL}/login`, { username, password });
+
+      // Save token
       localStorage.setItem("token", res.data.token);
 
+      // Decode JWT payload
       const payload = JSON.parse(atob(res.data.token.split(".")[1]));
-      if (payload.role === "admin") navigate("/admin");
-      else alert("Logged in as user");
+
+      if (payload.role === "admin") {
+        navigate("/admin"); // Admin dashboard
+      } else {
+        alert("Logged in as user");
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      if (err.response) {
+        setError(err.response.data.message || "Login failed");
+      } else if (err.request) {
+        setError("No response from server. Check backend URL.");
+      } else {
+        setError("Error: " + err.message);
+      }
+      console.error(err);
     }
   };
 
@@ -46,6 +63,7 @@ function Login() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-700 transition"
+            required
           />
         </div>
 
@@ -57,6 +75,7 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-700 transition"
+            required
           />
         </div>
 
@@ -66,7 +85,6 @@ function Login() {
         >
           Login
         </button>
-        
       </form>
     </div>
   );

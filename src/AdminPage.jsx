@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { BASE_URL } from "./api"; // import base URL
 
 function AdminPage() {
   const [contacts, setContacts] = useState([]);
@@ -8,14 +9,18 @@ function AdminPage() {
     const fetchContacts = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5050/contact", {
-          headers: { Authorization: token },
+        if (!token) return;
+
+        const res = await axios.get(`${BASE_URL}/contact`, {
+          headers: { Authorization: `Bearer ${token}` }, // ✅ include Bearer
         });
+
         setContacts(res.data);
       } catch (err) {
         console.error(err);
       }
     };
+
     fetchContacts();
   }, []);
 
@@ -76,14 +81,9 @@ function AdminPage() {
                   <td className="px-4 py-3">{c.company}</td>
                   <td className="px-4 py-3">{c.country}</td>
                   <td className="px-4 py-3">{c.title}</td>
-
-                  {/* Details with tooltip-style reveal */}
                   <td className="px-4 py-3 max-w-[260px]">
-                    <div className="truncate text-gray-300">
-                      {c.details}
-                    </div>
+                    <div className="truncate text-gray-300">{c.details}</div>
                   </td>
-
                   <td className="px-4 py-3 whitespace-nowrap text-gray-300">
                     {new Date(c.created_at).toLocaleString()}
                   </td>
